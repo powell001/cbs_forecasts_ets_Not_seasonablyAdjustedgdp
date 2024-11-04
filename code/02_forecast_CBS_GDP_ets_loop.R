@@ -36,12 +36,11 @@ library(lmtest)
 
 # load data
 dt1 <- read.csv("data/cbs_basic_macro_NOT_SEASONCORRECTED_qt.csv", sep = ",")
+summary(dt1)
 
 # not appropriate for negative numbers
 drops <- c("change_supply_season")
 dt1 <- dt1[ , !(names(dt1) %in% drops)]
-
-
 colnames(dt1)
 dim(dt1)
 
@@ -55,15 +54,16 @@ allColumns_1 <- allColumns[c(-1)]
 ##########################
 for(colName in allColumns_1){ 
 
+#colName <- "gdp_total_season"
 print(colName)
-
-#colName <- "Detailhandel.excl..auto.s..tankstations"
 
 # connects all the data
 Key1 <- paste(Sys.Date(), "_", colName, sep="")
 
 series1 <- ts(dt1[colName], frequency = 4, start=c(1995,1))
 series1 <- na.omit(series1)
+
+plot(series1)
 
 #########################
 # Which model to use
@@ -139,7 +139,7 @@ modelform <- str_c(c(errortype, trendtype, seasontype), collapse = "")
 
 fit <- ets(series1, model=modelform, damped=FALSE)
 
-h1 <- 4
+h1 <- 2
 train <- head(series1, round(length(series1) - h1))
 test <- tail(series1, h1)
 
@@ -147,7 +147,7 @@ fit <- ets(train, model=modelform, damped=FALSE)
 forecasted1 <- forecast(fit, h=h1)
 
 png(filename=paste("output/figures/", Key1, "TrainTestForecast.png", sep = "_"))
-print(autoplot(forecasted1, include=h1+6) + autolayer(test) + ggtitle(colName))
+print(autoplot(forecasted1, include=h1+16) + autolayer(test) + ggtitle(colName))
 dev.off()
 
 ####################
@@ -172,7 +172,7 @@ data <- data.frame(
   SeriesName   = colName, 
   DateAnalysis = Sys.Date(), 
   ETSmodel = modelform,
-  ObservationDate = as.yearmon(time(series1)),
+  ObservationDate = as.yearqtr(time(series1)),  ##### Careful here, yearmonth is not the same as yearqtr
   RawData = series1
 )
 data$Key1 <- Key1
@@ -258,14 +258,15 @@ colnames(tmp_forecast) <- colnames(tmp_raw)
 combined <- rbind(tmp_raw, tmp_forecast)
 
 # change to proper date
-combined$ObservationDate <- as.Date(paste(1, combined$ObservationDate), '%d %B %Y')
+#combined$ObservationDate <- as.Date(paste(1, combined$ObservationDate), '%d %B %Y')
 
 # colors for different parts of line
 combined$mycolors <- c(rep('hist', length(combined[,1])-2), rep(c('forecast'),2))
+combined$mycolors <- as.factor(combined$mycolors)
+combined$ObservationDate <- as.Date(as.yearqtr(combined$ObservationDate), frac = 0)
 
 png(filename=paste("output/figures/", series_name, "series_and_forecast.png", sep = "_"))
-ggplot(combined, aes(x =  ObservationDate, y = 'Raw', colour = mycolors, group = 1)) +
-geom_line()
+print(ggplot(combined, aes(x = ObservationDate, y = RawData, col = mycolors, group = 1)) + geom_line())
 dev.off()
 
 ###
@@ -273,6 +274,7 @@ dev.off()
 ###
 combined$seriesDifferenced <- combined['RawData'] - lag(combined['RawData'], 4)
 combined$seriesDifferenced <- unlist(combined$seriesDifferenced)
+
 
 png(filename=paste("output/figures/", series_name, "differenced_forecasts.png", sep = "_"))
 plot(ts(combined[,c(2,4)], frequency = 4, start=c(1995,1)), main=series_name)
