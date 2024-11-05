@@ -147,7 +147,7 @@ fit <- ets(train, model=modelform, damped=FALSE)
 forecasted1 <- forecast(fit, h=h1)
 
 png(filename=paste("output/figures/", Key1, "TrainTestForecast.png", sep = "_"))
-print(autoplot(forecasted1,  series = "In-sample Forecast", include=h1+16) + autolayer(test) + ggtitle(colName))
+print(autoplot(forecasted1,  series = "In-sample Forecast", include=h1+16) + autolayer(test, series = "Historical Data") + ggtitle(colName)) + ylab("Historical + Forecast")
 dev.off()
 
 ####################
