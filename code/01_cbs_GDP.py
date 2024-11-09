@@ -3,9 +3,11 @@ import cbsodata
 import matplotlib.pyplot as plt
 import numpy as np
 import functools as ft
-import datetime
+from datetime import datetime
 
 pd.set_option('display.max_columns', 40)
+
+todayDate = datetime.today().strftime('%Y_%m_%d')
 
 ###################################
 # https://cbsodata.readthedocs.io/en/latest/readme_link.html
@@ -51,7 +53,7 @@ def macro_data_cbs(identifier, verbose = False):
     return gdp_total
 
 NLD_basic_macro_data = macro_data_cbs(identifier = '84105NED', verbose = True)
-NLD_basic_macro_data.to_csv("data/cbs_basic_macro_NOT_SEASONCORRECTED_qt.csv")
+NLD_basic_macro_data.to_csv("data/cbs_basic_macro_NOT_SEASONCORRECTED_qt_" + todayDate + ".csv")
 print("2015, seasonably adjusted")
 print(NLD_basic_macro_data)
 
