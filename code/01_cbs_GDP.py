@@ -35,7 +35,7 @@ def macro_data_cbs(identifier, verbose = False):
         data.to_csv("data/tmp_ramdata.csv")
         print(data.Perioden)
 
-    data = data[data["SoortGegevens"] == 'Prijsniveau 2015']
+    data = data[data["SoortGegevens"] == 'Prijsniveau 2021']
     data = data[data['Perioden'].str.contains('kwartaal')]
     data.index = pd.date_range(start = start_date, periods = data.shape[0], freq = "Q").to_period('Q')
 
@@ -52,9 +52,9 @@ def macro_data_cbs(identifier, verbose = False):
 
     return gdp_total
 
-NLD_basic_macro_data = macro_data_cbs(identifier = '84105NED', verbose = True)
+NLD_basic_macro_data = macro_data_cbs(identifier = '85879NED', verbose = True)
 NLD_basic_macro_data.to_csv("data/cbs_basic_macro_NOT_SEASONCORRECTED_qt_" + todayDate + ".csv")
-print("2015, seasonably adjusted")
+print("2021, not seasonably adjusted")
 print(NLD_basic_macro_data)
 
 NLD_basic_macro_data.plot()
