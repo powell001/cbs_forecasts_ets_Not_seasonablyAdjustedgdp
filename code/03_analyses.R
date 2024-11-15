@@ -252,7 +252,7 @@ fun_bigchanges <- function(){
     output1 <- output1[!grepl("Totaal", output1[['series_name']]),]
 
 
-    write.table(output1, file = "output/analyses/combined_series_hist_forecasts.csv", sep =",",row.names = FALSE)
+    write.table(output1, file = "output/analyses/combined_series_hist_forecasts_differences.csv", sep =",",row.names = FALSE)
 }
 
 fun_bigchanges()
@@ -262,7 +262,7 @@ fun_bigchanges()
 ######################
 
 fun_bigchanges_absoluteValue_forecastedData <- function(){
-    myfile <- "output/analyses/combined_series_hist_forecasts.csv"
+    myfile <- "output/analyses/combined_series_hist_forecasts_differences.csv"
     bigchangers_df <- read.csv(myfile, stringsAsFactors=FALSE)
 
     bigchangers_df <- bigchangers_df[!grepl("Totaal", bigchangers_df$series_name),]
@@ -293,7 +293,7 @@ fun_bigchanges_absoluteValue_forecastedData()
 fun_big_Percentagechanges_forecastedData <- function(rawDataFile){ 
 
     # get forecasts from combined_final_forecasts.csv
-    myfile <- "output/analyses/combined_series_hist_forecasts.csv"
+    myfile <- "output/analyses/combined_series_hist_forecasts_differences.csv"
     df1 <- read.csv(myfile, stringsAsFactors=FALSE)
 
     # get name of varible and forecast (last column)
@@ -344,3 +344,43 @@ fun_big_Percentagechanges_forecastedData <- function(rawDataFile){
 }
 
 fun_big_Percentagechanges_forecastedData(rawDataFile)
+
+
+######################
+# Historical data plus level forecasts
+######################
+
+fun_combine_hist_forecast <- function(){ 
+
+    data <- read.csv(rawDataFile)
+    data$X <- as.Date(data$X)
+    rownames(data) <- data$X
+
+    finalForecasts <- read.csv("output/analyses/combined_final_forecasts.csv")
+    finalForecasts$featureNames <- str_sub(finalForecasts$Key1, 12)
+    finalForecasts$X <- as.Date(as.yearqtr(finalForecasts$Forecast_Period, format = "%Y Q%q"))
+    f1 <- finalForecasts[c('Point.Forecast','featureNames','X')]
+
+    f2 <- f1 |> 
+    pivot_wider(names_from = featureNames, 
+                values_from = Point.Forecast)
+
+    f2 <- as.data.frame(f2)
+    f2 <- f2[names(data)]
+    f3 <- f2[order(f2$X),]
+    rownames(f3) <- f3$X
+
+    replaceThese <- which(is.na(data[nrow(data), ]), arr.ind=TRUE)
+    lastDate <- data[nrow(data), 'X']
+
+    for (i in as.numeric(replaceThese[, 2])) {
+        data[nrow(data), i] <- f3[nrow(f3)-1, i]
+    }
+
+    output1 <- rbind(data, tail(f3,1))
+
+    write.table(output1, file = "output/analyses/combined_historical_forecasts_levels.csv", sep =",",row.names = FALSE)
+
+}
+
+fun_combine_hist_forecast()
